@@ -13,7 +13,7 @@ export const getRecipe = id => api.get(`/recipe/${id}`)
 // name requests
 export const getName = id => api.get(`/name/${id}`)
 export const getAllRecipeNames = () => api.get(`/names/all`)
-export const getNamesByCategory = category => api.get(`/name/category/${category}`)
+export const getNamesByCategory = category => api.get(`/names/category/${category}`)
 
 // ingredients requests
 export const getIngredients = id => api.get(`/ingredients/${id}`)

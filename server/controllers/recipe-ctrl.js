@@ -14,7 +14,7 @@ addRecipe = (req, res) => {
     const body = req.body
 
     // check to make sure that the body is not empty 
-    if (!Object.keys(body).length) {
+    if (!Object.keys(body).length){
         return res.status(400).json({
             success: false,
             error: "add recipe: body of request is empty!",
@@ -27,9 +27,17 @@ addRecipe = (req, res) => {
     const instructions = new recipeInstructions({"_id": name._id, "instructions": body.instructions})
 
     // save recipe to database 
-    name.save()
-    ingredients.save()
-    instructions.save()
+    try{
+        name.save()
+        ingredients.save()
+        instructions.save()
+    }
+    catch(err){
+        return res.status(400).json({
+            success: false,
+            error: "add recipe: " + err
+        })
+    }
 
     // return id of new recipe 
     return res.status(201).json({
@@ -39,58 +47,43 @@ addRecipe = (req, res) => {
     })
 }
 
-// update a recipe 
+// update a recipe by ID
 updateRecipe = (req, res) => {
     const body = req.body
 
-    if (!body) {
+    // check to make sure that the body is not empty 
+    if (!Object.keys(body).length){
         return res.status(400).json({
             success: false,
-            error: 'No recipe to update',
+            error: "update recipe: body of request is empty!",
         })
     }
 
     // update name
-    recipeNames.findById(req.params.id).then(function(name, err){
-        if (err) {
-            return res.status(404).json({
-                err,
-                message: 'Recipe name not found!',
-            })
-        }
+    recipeNames.findById(req.params.id).then(function(name){
         name.name = body.name
         name.category = body.category
         name.save()
     })
 
-    recipeIngredients.findById(req.params.id).then(function(ingredients, err){
-        if (err) {
-            return res.status(404).json({
-                err,
-                message: 'Recipe ingredients not found!',
-            })
-        }
+    // update ingredients
+    recipeIngredients.findById(req.params.id).then(function(ingredients){
         ingredients.ingredients = body.ingredients
         ingredients.units = body.units
         ingredients.quantitys = body.quantitys
         ingredients.save()
     })
 
-    recipeInstructions.findById(req.params.id).then(function(ingredients, err){
-        if (err) {
-            return res.status(404).json({
-                err,
-                message: 'Recipe instructions not found!',
-            })
-        }
-        ingredients.instructions = body.instructions
-        ingredients.save()
+    // update instructions
+    recipeInstructions.findById(req.params.id).then(function(instructions){
+        instructions.instructions = body.instructions
+        instructions.save()
     })
 
     return res.status(201).json({
         success: true,
         id: req.params.id,
-        message: 'Recipe Added!',
+        message: 'Recipe Updated!',
     })
 }
 
@@ -112,7 +105,10 @@ getRecipe = async(req, res) => {
     
     // check that the id is valid 
     if (!mongoose.isValidObjectId(req.params.id)){
-        return res.status(400).json({ success: false, error: "invalid id" })
+        return res.status(400).json({ 
+            success: false, 
+            error: "get recipe: invalid id" 
+        })
     }
 
     return await recipeNames.aggregate(
@@ -167,13 +163,15 @@ getRecipe = async(req, res) => {
         ]
     )
     .then(function(recipe, err){
-        console.log(err)
-        if (err) {
-            return res.status(400).json({ success: false, error: err })
+        
+        // check that a recipe was found
+        if (!recipe.length){
+            return res.status(404).json({ 
+                success: false, 
+                error: `get recipe: recipe not found!` 
+            })
         }
-        if (!recipe){
-            return res.status(404).json({ success: false, error: `Recipe not Found` })
-        }
+
         return res.status(200).json({ success: true, data: recipe})
     })
 }
