@@ -9,7 +9,13 @@ const recipeInstructions = require('../models/recipeInstruction-model')
 
 /** ---------- Recipe Requests ---------- **/
 
-// add a new recipe to the database 
+/** 
+ * add a new recipe to the database 
+ * 
+ * return: 
+ * - if: request body is empty -> error 400
+ * - else: ID of the newly created recipe
+ * */ 
 addRecipe = (req, res) => {
     const body = req.body
 
@@ -27,17 +33,10 @@ addRecipe = (req, res) => {
     const instructions = new recipeInstructions({"_id": name._id, "instructions": body.instructions})
 
     // save recipe to database 
-    try{
-        name.save()
-        ingredients.save()
-        instructions.save()
-    }
-    catch(err){
-        return res.status(400).json({
-            success: false,
-            error: "add recipe: " + err
-        })
-    }
+
+    name.save()
+    ingredients.save()
+    instructions.save()
 
     // return id of new recipe 
     return res.status(201).json({
@@ -47,7 +46,13 @@ addRecipe = (req, res) => {
     })
 }
 
-// update a recipe by ID
+/**
+ * update a recipe by ID
+ * 
+ * return: 
+ * - if: request body is empty -> error 400
+ * - else: ID of the updated recipe
+ * */ 
 updateRecipe = (req, res) => {
     const body = req.body
 
@@ -87,7 +92,12 @@ updateRecipe = (req, res) => {
     })
 }
 
-// delete a recipe by id 
+/**
+ * delete a recipe by id 
+ * 
+ * return:
+ * - ID of the deleted recipe
+ * */ 
 deleteRecipe = async (req, res) => {
     await recipeNames.findOneAndDelete({ _id: req.params.id })
     await recipeIngredients.findOneAndDelete({ _id: req.params.id })
@@ -100,7 +110,14 @@ deleteRecipe = async (req, res) => {
     })
 }
 
-// get recipe name, ingredients, and instructions by id
+/**
+ * get recipe name, ingredients, and instructions by id
+ * 
+ * return: 
+ * - if: ID is invalid -> error 400
+ * - else if: ID not found -> error 404
+ * - else: recipe with matching ID
+ */
 getRecipe = async(req, res) => {
     
     // check that the id is valid 
@@ -162,93 +179,164 @@ getRecipe = async(req, res) => {
             }
         ]
     )
-    .then(function(recipe, err){
-        
+    .then(function(recipe){
+
         // check that a recipe was found
         if (!recipe.length){
             return res.status(404).json({ 
                 success: false, 
-                error: `get recipe: recipe not found!` 
+                error: `get recipe: ID not found!` 
             })
         }
 
-        return res.status(200).json({ success: true, data: recipe})
+        return res.status(200).json({ 
+            success: true, 
+            data: recipe
+        })
     })
 }
 
 /** ---------- Name Requests ---------- **/
 
-// get recipe name by id 
+/**
+ * get recipe name by id 
+ * 
+ * return:
+ * - if: ID is invalid -> error 400
+ * - else if: ID not found -> error 404
+ * - else: name document with matching ID
+ * */ 
 getName = async(req, res) => {
-    return await recipeNames.findById(req.params.id).then(function(name, err){
-        if (err) {
-            return res.status(400).json({ success: false, error: err })
-        }
+
+    // check that the id is valid 
+    if (!mongoose.isValidObjectId(req.params.id)){
+        return res.status(400).json({ 
+            success: false, 
+            error: "get name: invalid id" 
+        })
+    }
+
+    return await recipeNames.findById(req.params.id).then(function(name){
+
+        // check that a name was found
         if (!name){
-            return res.status(404).json({ success: false, error: `Name not found` })
+            return res.status(404).json({ 
+                success: false, 
+                error: `get name: ID not found` })
         }
-        return res.status(200).json({ success: true, data: name})
-    }).catch(err => console.log(err))
+
+        return res.status(200).json({
+            success: true, 
+            data: name
+        })
+    })
 }
 
-// get all recipe names
+
+/**
+ * get all recipe names
+ * 
+ * return:
+ * - the entire recipe names collection 
+ * - (note that an [] will be returned if there are no documents in the collection)
+ * */ 
 getAllNames = async(req, res) => {
     return await recipeNames.find(
         {}
-    ).then(function(recipeNames, err){
-        if (err) {
-            return res.status(400).json({ success: false, error: err })
-        }
-        if (!recipeNames.length) {
-            return res.status(404).json({ success: false, error: `No Recipes!` })
-        }
-        return res.status(200).json({ success: true, data: recipeNames})
-    }).catch(err => console.log(err))
+    ).then(function(recipeNames){
+        return res.status(200).json({ 
+            success: true, 
+            data: recipeNames
+        })
+    })
 }
 
-// get all recipe names
+/**
+ * get all recipe names within the corresponding category
+ * 
+ * return:
+ * - all names of recipes in the category specified 
+ * - (note that an [] will be returned if there are no recipes in that category)
+ */
 getNamesByCategory = async(req, res) => {
     return await recipeNames.find(
         {category: req.params.category}
     ).then(function(recipeNames, err){
-        if (err) {
-            return res.status(400).json({ success: false, error: err })
-        }
-        if (!recipeNames.length) {
-            return res.status(404).json({ success: false, error: `No Recipes!` })
-        }
-        return res.status(200).json({ success: true, data: recipeNames})
-    }).catch(err => console.log(err))
+        return res.status(200).json({ 
+            success: true, 
+            data: recipeNames
+        })
+    })
 }
 
-
-// get ingredients by id
+/**
+ * get ingredients by id 
+ * 
+ * return:
+ * - if: ID is invalid -> error 400
+ * - else if: ID not found -> error 404
+ * - else: ingredients document with matching ID
+ * */ 
 getIngredients = async(req, res) => {
+
+    // check that the id is valid 
+    if (!mongoose.isValidObjectId(req.params.id)){
+        return res.status(400).json({ 
+            success: false, 
+            error: "get ingredients: invalid id" 
+        })
+    }
+
     return await recipeIngredients.findById(req.params.id).then(function(ingredients, err){
-        if (err) {
-            return res.status(400).json({ success: false, error: err })
-        }
         if (!ingredients){
-            return res.status(404).json({ success: false, error: `Ingredients not found` })
+            return res.status(404).json({ 
+                success: false, 
+                error: `get ingredients: ID not found` 
+            })
         }
         return res.status(200).json({ success: true, data: ingredients})
     }).catch(err => console.log(err))
 }
 
-// get instructions by id
+/**
+ * get instructions by id
+ * 
+ * return:
+ * - if: ID is invalid -> error 400
+ * - else if: ID not found -> error 404
+ * - else: instruction document with matching ID
+ * */ 
 getInstructions = async(req, res) => {
+
+    // check that the id is valid 
+    if (!mongoose.isValidObjectId(req.params.id)){
+        return res.status(400).json({ 
+            success: false, 
+            error: "get instructions: invalid id" 
+        })
+    }
+
     return await recipeInstructions.findById(req.params.id).then(function(instructions, err){
-        if (err) {
-            return res.status(400).json({ success: false, error: err })
-        }
         if (!instructions){
-            return res.status(404).json({ success: false, error: `Instructions not found` })
+            return res.status(404).json({ 
+                success: false, 
+                error: `get instructions: ID not found` })
         }
-        return res.status(200).json({ success: true, data: instructions})
-    }).catch(err => console.log(err))
+        return res.status(200).json({ 
+            success: true, 
+            data: instructions
+        })
+    })
 }
 
-// get recipes by ingredients 
+
+/**
+ * get recipes by ingredients 
+ * 
+ * return:
+ * - recipes with ingredents that matches the regex 
+ * - (note that if there are no matches [] is returned)
+ */
 searchByIngredients =  async(req, res) => {
     regex = req.params.queryString.split("&")
     for (i=0; i<regex.length; i++){
@@ -284,13 +372,7 @@ searchByIngredients =  async(req, res) => {
             }
         ]
     )
-    .then(function(recipe, err){
-        if (err) {
-            return res.status(400).json({ success: false, error: err })
-        }
-        if (!recipe){
-            return res.status(404).json({ success: false, error: `Search Fail` })
-        }
+    .then(function(recipe){
         return res.status(200).json({ success: true, data: recipe})
     })
 }
@@ -312,6 +394,7 @@ getRecipeByIngredient =  async(req, res) => {
     })
 }
  */
+
 module.exports = {
     addRecipe,
     updateRecipe,
