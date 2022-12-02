@@ -2,52 +2,51 @@
  * Page displays a single recipe
  */
 
-import {React, Component} from 'react';
-import {Container, Row, Col, Table, Card, Button} from 'react-bootstrap';
+import {Component, React} from 'react';
+import {Button, Card, Container, Col, Row, Table} from 'react-bootstrap';
 import apis from '../API'
 
 class Recipe extends Component{
     constructor(props){
         super(props)
+
         const url = window.location.href.split('/')
+
         this.state = {
             id: url[url.length-1], // id of the database entry 
-            isLoading: true, // tells us when api call is complete 
 
-            // recipe data
-            Name: "",
-            Ingredients: [],
-            Quantitys: [],
-            Units: [],
-            Instructions: [],
-
-            modalShow: false
+            // recipe data to be loaded in from the database
+            name: "", 
+            ingredients: [],
+            quantitys: [],
+            units: [],
+            instructions: []
         }
     }
 
     componentDidMount = async() => {
-        // get recipe name
-        await apis.getRecipe(this.state.id).then(Recipe => { 
-            console.log(Recipe)
+
+        // make api call to get the recipe data
+        await apis.getRecipe(this.state.id).then(recipe => { 
             this.setState({
-                Name: Recipe.data.data[0]["name"],
-                Ingredients: Recipe.data.data[0]["ingredients"],
-                Quantitys: Recipe.data.data[0]["quantitys"],
-                Units: Recipe.data.data[0]["units"],
-                Instructions: Recipe.data.data[0]["instructions"],
-                isLoading: false
+                name: recipe.data.data[0].name,
+                ingredients: recipe.data.data[0].ingredients,
+                quantitys: recipe.data.data[0].quantitys,
+                units: recipe.data.data[0].units,
+                instructions: recipe.data.data[0].instructions,
             })
-        }).catch(err => {
-            console.log("there was an error")
-            console.log(err)
+        }).catch(error => {
+            console.log("Error " + error.response.status + ": " + error.response.statusText)
             window.location = '/*'
         })
     }
 
+    // take the user to the edit page
     edit(){
         window.location = "/recipe/edit/" + this.state.id
     }
 
+    // make api call to delete the recipe from the database
     delete = async() => {
         await apis.deleteRecipe(this.state.id).then(() => {
             window.location = "/recipes/all"
@@ -55,17 +54,12 @@ class Recipe extends Component{
     }
 
     render(){
-        const { Name, Ingredients, Quantitys, Units, Instructions, isLoading } = this.state
-        let header = "Loading ..."
-        if (!isLoading){
-            header = Name
-        }
         return (
             <Container>
                 <Row>
                     <Col>
                         <Card className="mb-3">
-                            <Card.Header><h1 className="mb-3" style={{alignSelf: "center", textAlign: "center"}} >{header}</h1></Card.Header>
+                            <Card.Header><h1 className="mb-3" style={{alignSelf: "center", textAlign: "center"}} >{this.state.name}</h1></Card.Header>
                             <Card.Body>
                                 <Table striped bordered hover>
                                     <thead>
@@ -76,8 +70,8 @@ class Recipe extends Component{
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td><ul>{Ingredients.map((ingredient, i) => <li key={i}>{Quantitys[i]} {Units[i]} {ingredient}</li>)}</ul></td> 
-                                            <td><ol>{Instructions.map((instruction, i) => <li key={i}>{instruction}</li>)}</ol></td> 
+                                            <td><ul>{this.state.ingredients.map((ingredient, i) => <li key={i}>{this.state.quantitys[i]} {this.state.units[i]} {ingredient}</li>)}</ul></td> 
+                                            <td><ol>{this.state.instructions.map((instruction, i) => <li key={i}>{instruction}</li>)}</ol></td> 
                                         </tr>
                                     </tbody>
                                 </Table>

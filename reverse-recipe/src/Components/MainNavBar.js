@@ -1,5 +1,8 @@
-import Container from 'react-bootstrap/Container';
-import {Navbar, Nav, NavDropdown} from 'react-bootstrap';
+/**
+ * NavBar for the site
+ */
+
+import {Container, Nav, Navbar, NavDropdown} from 'react-bootstrap';
 import Image from 'react-bootstrap/Image'
 import logo from '../SVGs/chef-hat.svg'
 
@@ -9,7 +12,7 @@ export default function MainNavBar() {
       <Container>
         <Navbar.Brand href="/">
             <Image src={logo} width="30" height="30" className="d-inline-block align-top" ></Image>
-            &nbsp; Reverse Recipe
+            &nbsp; Recipe Book
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

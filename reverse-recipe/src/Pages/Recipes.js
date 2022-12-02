@@ -1,31 +1,36 @@
 /**
- * Page displays all recipies 
+ * Page displays a category of recipies / all recipes
  */
-import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import {Container, Row, Col, Card} from 'react-bootstrap';
+import {Component, React} from 'react';
+import {Link} from 'react-router-dom';
+import {Card, Container, Col, Row} from 'react-bootstrap';
 import apis from '../API'
 
 class Recipes extends Component{
     constructor(props){
         super(props)
+
         const url = window.location.href.split('/')
+
         this.state = {
-            category: url[url.length-1],
-            recipeNames: []
+            category: url[url.length-1], // category of recipes to be loaded
+            recipeNames: [] // names of all the recipes of this category
         }
     }
 
     componentDidMount = async() => {
         this.setState({ isLoading: true })
 
+        // call api to get all recipe names
         if (this.state.category === "all"){
-            await apis.getAllRecipeNames().then(recipeNames => {
+            await apis.getAllNames().then(recipeNames => {
                 this.setState({
                     recipeNames: recipeNames.data.data,
                 })
             })
         }
+
+        // call api to get all recipe names of a specified category
         else{
             await apis.getNamesByCategory(this.state.category).then(recipeNames => {
                 this.setState({
@@ -62,7 +67,6 @@ class Recipes extends Component{
                     <Card>
                         <Card.Header>{cardHeader}</Card.Header>
                         <Card.Body>
-                            {/* <Card.Title>Recipes</Card.Title> */}
                                 {recipeNames.map(recipeNames => <Card.Text key={recipeNames._id}> <Link to={"/recipe/" + recipeNames._id}>{recipeNames.name}</Link> </Card.Text> )}
                         </Card.Body>
                     </Card>

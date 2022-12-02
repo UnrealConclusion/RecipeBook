@@ -1,9 +1,9 @@
 /**
  * Page allows user to search for recipies by ingredients 
  */
-import React, { Component } from 'react';
+import {Component, React} from 'react';
 import {Link} from 'react-router-dom'
-import {Container, Row, Col, Form, Button} from 'react-bootstrap';
+import {Button, Container, Col, Row, Form} from 'react-bootstrap';
 
 class Home extends Component{
     constructor(props){

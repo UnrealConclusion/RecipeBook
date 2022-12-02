@@ -1,62 +1,79 @@
 /**
- * Page is used to edit a recipe 
+ * Page allows a recipe to be edited
  */
 
-import React, { Component } from 'react';
-import {Container, Row, Col, Card, Button, Form} from 'react-bootstrap';
+import {Component, React} from 'react';
+import {Button, Card, Container, Col, Row, Image, Form} from 'react-bootstrap';
 import apis from '../API'
- 
+import xIcon from '../SVGs/x-lg.svg'
+import upArrow from '../SVGs/arrow-up.svg' 
+import downArrow from '../SVGs/arrow-down.svg' 
+
 class Add extends Component{
     constructor(props){
         super(props)
-        const url = window.location.href.split('/')
+
+        const url = window.location.href.split('/') 
+
         this.state = {
             id: url[url.length-1], // id of the database entry ,
 
-            name: "",
-            category: "",
-            ingredientFields: [{quantity: "", unit: "", ingredient: ""}],
-            instructionFields: [{instruction: ""}]
+            name: "", // name of the recipe
+            category: "", // category of recipe
+            ingredientFields: [{quantity: "", unit: "", ingredient: ""}], // array contains each input field for ingredients 
+            instructionFields: [{instruction: "", upDisabled: true, downDisabled: true}] // array contains each input field for instructions 
         }
     }
 
     componentDidMount = async() => {
-        // get recipe name
-        await apis.getRecipe(this.state.id).then(Recipe => { 
-            console.log(Recipe.data.data[0]["ingredients"])
+        
+        // call api to get the recipe information 
+        await apis.getRecipe(this.state.id).then(recipe => { 
+
+            // push all ingredient into the ingredients array
             let ingredients = []
-            for (let i=0; i<Recipe.data.data[0]["ingredients"].length; i++){
-                ingredients.push({quantity: Recipe.data.data[0]["quantitys"][i], unit: Recipe.data.data[0]["units"][i], ingredient: Recipe.data.data[0]["ingredients"][i]})
+            for (let i=0; i<recipe.data.data[0].ingredients.length; i++){
+                ingredients.push({quantity: recipe.data.data[0].quantitys[i], unit: recipe.data.data[0].units[i], ingredient: recipe.data.data[0].ingredients[i]})
             }
 
+            // push all instruction into the instructions array
             let instructions = []
-            for (let i=0; i<Recipe.data.data[0]["instructions"].length; i++){
-                instructions.push({instruction: Recipe.data.data[0]["instructions"][i]})
+            for (let i=0; i<recipe.data.data[0].instructions.length; i++){
+                instructions.push({instruction: recipe.data.data[0].instructions[i], upDisabled: false, downDisabled: false})
             }
             
+            // disable the first up button and last down button
+            if (instructions.length > 0){
+                instructions[0].upDisabled = true
+                instructions[instructions.length-1].downDisabled = true
+            }
+
             this.setState({
-                name: Recipe.data.data[0]["name"],
-                category: Recipe.data.data[0]["category"],
+                name: recipe.data.data[0].name,
+                category: recipe.data.data[0].category,
                 ingredientFields: ingredients,
                 instructionFields: instructions
             })
+        }).catch(error => {
+            console.log("Error " + error.response.status + ": " + error.response.statusText)
         })
     }
 
-    // handle input of name 
+    // update the value of name in respond to changes to the input field
     nameChange(event){
         this.setState({
             name: event.target.value
         })
     }
 
+    // update the value of catagory in respond to a different value being selected 
     categoryChange(value){
         this.setState({
             category: value
         })
     }
 
-    // handle inputs of ingredients
+    // update the value of the ingredients array in respond to changes to the input fields 
     ingredientChange(i, event){
         let data = [...this.state.ingredientFields]
         data[i][event.target.name] = event.target.value
@@ -65,7 +82,7 @@ class Add extends Component{
         })
     }
 
-    // handle inputs of instructions 
+    // update the value of the instructions array in respond to changes to the input fields 
     instructionChange(i, event){
         let data = [...this.state.instructionFields]
         data[i][event.target.name] = event.target.value
@@ -74,7 +91,7 @@ class Add extends Component{
         })
     }
 
-    // add an ingredient field
+    // add a new ingredient field to the ingredients field array
     addIngredient(){
         let current = this.state.ingredientFields
         current.push({quantity: "", unit: "", ingredient: ""})
@@ -83,6 +100,7 @@ class Add extends Component{
         })
     }
 
+    // delete a ingredient fields from the ingredients field array 
     deleteIngredient(i){
         let current = this.state.ingredientFields
         current.splice(i, 1)
@@ -91,30 +109,86 @@ class Add extends Component{
         })
     }
 
-    // add an instruction field
+    // add a new instruction field to the instructions field array
     addInstruction(){
         let current = this.state.instructionFields
-        current.push({instruction: ""})
+
+        // disable both buttons if this is the only instruction
+        if (current.length === 0){
+            current.push({instruction: "", upDisabled: true, downDisabled: true})
+        }
+
+        // enable the down button of the current instruction while disabling the down button of the new instruction
+        else{
+            current[current.length-1].downDisabled = false
+            current.push({instruction: "", upDisabled: false, downDisabled: true})
+        }
+
         this.setState({
             instructionFields: current
         })
     }
 
+    // delete a instruction field from the instructions field array
     deleteInstruction(i){
         let current = this.state.instructionFields
+
+        if (current.length > 1){
+            // disable the up button of the next instruction if this is the 1st instruction and it is not the only instruction
+            if (i === 0 && current.length > 1){
+                current[i+1].upDisabled = true
+            }
+
+            // disable the down button of the last instruction if this is the last instruction and it is not the only instruction
+            else if (i === current.length-1){
+                current[i-1].downDisabled = true
+            }
+        }
+
         current.splice(i,1)
         this.setState({
             instructionFields: current
         })
     }
 
-    // add recipe to the Database
+    // move an instruction up
+    moveInstructionUp(i){
+        let current = this.state.instructionFields
+        let temp = current[i].instruction
+
+        current[i].instruction = current[i-1].instruction
+        current[i-1].instruction = temp
+
+        console.log(current[i])
+        this.setState({
+            instructionFields: current
+        })
+    }
+
+    // move an instruction down 
+    moveInstructionDown(i){
+        let current = this.state.instructionFields
+        let temp = current[i].instruction
+
+        current[i].instruction = current[i+1].instruction
+        current[i+1].instruction = temp
+
+        console.log(current[i])
+        this.setState({
+            instructionFields: current
+        })
+    }
+
+    // update the recipe in the Database
     updateRecipe = async () => {
+
+        // check that the recipe has a name
         if (this.state.name === ""){
             window.alert("A name is required!")
             return
         }
 
+        // push all ingredient field values into arrays
         let ingredients = []
         let units = []
         let quantitys = []
@@ -123,25 +197,28 @@ class Add extends Component{
             units.push(this.state.ingredientFields[i]["unit"])
             quantitys.push(this.state.ingredientFields[i]["quantity"])
         }
-        console.log(units)
         
+        // push all instruction field values into an array
         let instructions = []
         for (let i=0; i<this.state.instructionFields.length; i++){
             instructions.push(this.state.instructionFields[i]["instruction"])
         }
 
+        // create the payload object
         const payload = {"name": this.state.name, "category": this.state.category, "ingredients": ingredients, "units": units, "quantitys": quantitys, "instructions": instructions}
+        
+        // api call to update the recipe
         await apis.updateRecipe(this.state.id, payload).then(res => {
-            window.location = "/recipe/" + res.data.id
+            window.location = "/recipe/" + res.data.id // display the updated recipe
         })
     }
 
+    // take the user back to the recipe page
     cancelEdit(){
         window.location = "/recipe/" + this.state.id
     }
 
     render(){
-        const {ingredientFields, instructionFields } = this.state
         return (
             <Container>
                 <Row>
@@ -179,7 +256,7 @@ class Add extends Component{
                                             <Form.Label>Ingredient</Form.Label>
                                         </Col>
                                     </Row>
-                                    {ingredientFields.map((field, i) => {
+                                    {this.state.ingredientFields.map((field, i) => {
                                         return (
                                             <Row className="mb-3" key={i}>
                                                 <Col xs={2}>
@@ -204,15 +281,22 @@ class Add extends Component{
                                     </Row>
                              
                                     <Card.Header className="mb-3"><h3 style={{alignSelf: "center", textAlign: "center"}}>Instructions</h3></Card.Header>
-                                    {instructionFields.map((field, i) => {
+                                    {this.state.instructionFields.map((field, i) => {
                                         return (
                                             <Row className="mb-3" key={i}>
-                                                <Form.Label>Step {i+1}</Form.Label>
-                                                <Col xs={11}>
+                                                <Col xs={10}>
                                                     <Form.Control type="text" value={field.instruction} name='instruction' onChange={event => this.instructionChange(i, event)}/>
                                                 </Col>
-                                                <Col xs={1} style={{ display: "flex" }}>
-                                                    <Button variant="danger" style={{ marginLeft: "auto" }} onClick={() => this.deleteInstruction(i)}>x</Button>
+                                                <Col xs={2} style={{display: "flex"}}>
+                                                    <Button variant="outline-secondary" style={{marginLeft: "20px"}} disabled={field.upDisabled} onClick={() => this.moveInstructionUp(i)}>
+                                                        <Image src={upArrow}></Image>
+                                                    </Button>
+                                                    <Button variant="outline-secondary" style={{marginLeft: "10px"}} disabled={field.downDisabled} onClick={() => this.moveInstructionDown(i)}>
+                                                        <Image src={downArrow}></Image>
+                                                    </Button>
+                                                    <Button variant="outline-danger" style={{marginLeft: "auto"}} onClick={() => this.deleteInstruction(i)}>
+                                                        <Image src={xIcon}></Image>
+                                                    </Button>
                                                 </Col>
                                             </Row>
                                         )
