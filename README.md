@@ -1,4 +1,4 @@
-# ReverseRecipe
+# RecipeBook
 A recipe book application that allows the user to add recipes to a database and search for them by ingredients.
 
 ## Architecture and Technologies 
@@ -12,3 +12,4 @@ The application is build with a MERN stack architecture. The back-end consists o
     - queries can be found in the controllers folder in recipe-ctrl.js
     - recipes are broken into 3 seperate collections
         - models can be found in server/model folder
+ 
