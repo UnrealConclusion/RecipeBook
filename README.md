@@ -12,4 +12,13 @@ The application is build with a MERN stack architecture. The back-end consists o
     - queries can be found in the controllers folder in recipe-ctrl.js
     - recipes are broken into 3 seperate collections
         - models can be found in server/model folder
- 
+
+### Running the Application
+- call withing the application folder to run the front-end application
+```
+    npm start
+```
+- call withing the application folder to run the front-end application
+```
+    node index.js
+```
